@@ -1,0 +1,168 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+import time
+from sklearn import svm
+from sklearn.metrics import classification_report
+from string import digits
+import pandas as pd
+import csv
+import numpy as np 
+import pandas as pd 
+import re
+import nltk 
+import matplotlib.pyplot as plt 
+%matplotlib inline
+
+
+def write_trainOut(child1,child2):
+    with open('trainOut.csv','a') as fd:
+        fd.write(child1+","+child2+"\n")
+        fd.close()  
+
+def write_testOut(child1,child2):
+    with open('testOut.csv','a') as fd:
+        fd.write(child1+","+child2+"\n")        
+        fd.close()
+print("...pass1...")        
+        
+TAG_RE = re.compile(r'<[^>]+>')
+
+def remove_tags(text):
+    return TAG_RE.sub('', text)
+        
+        
+def preprocess_text(sen):
+    # Removing html tags
+    sentence = remove_tags(sen)
+
+    # Remove punctuations and numbers
+    sentence = re.sub('[^a-zA-Z]', ' ', sentence)
+
+    # Single character removal
+    sentence = re.sub(r"\s+[a-zA-Z]\s+", ' ', sentence)
+
+    # Removing multiple spaces
+    sentence = re.sub(r'\s+', ' ', sentence)
+
+    return sentence        
+    
+print("...pass2...") 
+with open('train.csv', mode='r',errors='ignore') as csv_file1:
+    csv_reader1 = csv.DictReader(csv_file1)
+    line_count = 0
+    for row in csv_reader1:
+        if line_count == 0:
+            line_count += 1
+        sen=row["Content"].lower()
+        x=preprocess_text(sen)
+        write_trainOut(x,row["Label"])
+        line_count += 1
+csv_file1.close()
+print("...pass3...") 
+with open('test.csv', mode='r',errors='ignore') as csv_file2:
+    csv_reader2 = csv.DictReader(csv_file2)
+    line_count = 0
+    for row in csv_reader2:
+        if line_count == 0:
+            #print(f'movieName,comment,sentiment')
+            line_count += 1
+        #print(f'{row["movieName"]},{row["comment"]},positive')
+        sen=row["Content"].lower()
+        x=preprocess_text(sen)
+        write_testOut(x,row["Label"])
+        line_count += 1    
+csv_file2.close()        
+print("...pass4...") 
+# train Data
+trainData = pd.read_csv("trainOut.csv")
+print("Training Set:"% trainData.columns, trainData.shape, len(trainData))
+# test Data
+testData = pd.read_csv("testOut.csv")
+print("Test Set:"% testData.columns, testData.shape, len(testData))
+
+# Create feature vectors
+vectorizer = TfidfVectorizer(min_df = 5,
+                             max_df = 0.8,
+                             sublinear_tf = True,
+                             use_idf = True)
+
+train_vectors = vectorizer.fit_transform(trainData['Content'])
+test_vectors = vectorizer.transform(testData['Content'])
+
+
+
+print("...pass5...") 
+"""
+#Perform classification with SVM, kernel=linear
+clf = svm.SVC(kernel='linear')
+t0 = time.time()
+clf.fit(train_vectors, trainData['Label'])
+t1 = time.time()
+prediction_linear = clf.predict(test_vectors)
+t2 = time.time()
+time_linear_train = t1-t0
+time_linear_predict = t2-t1
+
+"""
+# Perform classification with Naive Bayes
+clf = MultinomialNB(alpha=5)
+t0 = time.time()
+clf.fit(train_vectors, trainData['Label'])
+t1 = time.time()
+prediction_linear = clf.predict(test_vectors)
+t2 = time.time()
+time_linear_train = t1-t0
+time_linear_predict = t2-t1
+
+
+# results
+print("Results for SVC(kernel=linear)")
+print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
+report = classification_report(testData['Label'], prediction_linear, output_dict=True)
+print('positive: ', report['positive'])
+print('negative: ', report['negative'])
+
+print("...pass6...") 
+def testByMachine(arg1):
+    review_vector = vectorizer.transform([arg1]) # vectorizing
+    #print(classifier_linear.predict(review_vector))
+    return clf.predict(review_vector)
+
+
+
+def my_function(child1,child2,child3):
+    with open('output.csv','a') as fd:
+        fd.write(child1+" , "+child2+","+child3+"\n")
+        fd.close()
+    
+print("...pass7...") 
+with open('input.csv', mode='r') as csv_file3:
+    csv_reader3 = csv.DictReader(csv_file3)
+    line_count = 0
+    for row in csv_reader3:
+        if line_count == 0:
+            line_count += 1
+        sent=row["comment"].lower()
+        clean_comment=preprocess_text(sent)
+        
+        machine=str(testByMachine(clean_comment)).replace("['", '')
+        machine=machine.replace("']", '')
+        my_function(row["movieName"],clean_comment,machine)
+        line_count += 1
+csv_file3.close()
+
+print("...pass8...")         
+
+data_source_url = pd.read_csv("output.csv")
+
+plot_size = plt.rcParams["figure.figsize"] 
+#print(plot_size[0]) 
+#print(plot_size[1])
+
+plot_size[0] = 7
+plot_size[1] = 7
+plt.rcParams["figure.figsize"] = plot_size 
+data_source_url.movieName.value_counts().plot(kind='pie', autopct='%1.0f%%')
+#data_source_url.sentiment.value_counts().plot(kind='pie', autopct='%1.0f%%', colors=["red", "yellow"])
+sentiment = data_source_url.groupby(['movieName','sentiment']).sentiment.count().unstack()
+sentiment.plot(kind='bar',color=["red", "green"])
