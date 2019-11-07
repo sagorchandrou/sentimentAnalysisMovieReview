@@ -1,4 +1,0 @@
-# sentimentAnalysisMovieReview
-#movieReviewByIMDBdataSet
--------------------------------------------------
-
