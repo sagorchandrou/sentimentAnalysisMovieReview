@@ -1,4 +1,4 @@
-# sentimentAnalysisMovieReview
+# Machine learning with sentimentAnalysisMovieReview
 movieReviewByIMDBdataSet
 #### Briefing #####
 Sentiment Analysis is the most prominent branch of natural language processing. 
