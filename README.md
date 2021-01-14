@@ -1,7 +1,7 @@
 # Machine learning with sentimentAnalysisMovieReview
 movieReviewByIMDBdataSet
 #### Briefing #####
-Sentiment Analysis is the most prominent branch of natural language processing. 
+Sentiment Analysis is the most prominent branch of natural language processing in the branch machine learning. 
 It is the computational technique of opinions, sentiments of text on movie review. 
 It deals with the text classification in order to determine the intention of the author of the text.
 Text data generated from the opinion or review or any comments is increasing rapidly. 
